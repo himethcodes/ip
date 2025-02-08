@@ -1,106 +1,94 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class BuddyBot {
-    private static final int MAX_TASKS = 100;
-    private static Task[] tasks = new Task[MAX_TASKS];
-    private static int taskCount = 0;
+    private final ArrayList<Task> tasks;
 
-    public static void main(String[] args) {
+    public BuddyBot() {
+        this.tasks = new ArrayList<>();
+    }
+
+    public void run() {
         Scanner scanner = new Scanner(System.in);
-
-        printGreeting();
+        System.out.println("Hello! I'm BuddyBot\nWhat can I do for you?");
 
         while (true) {
-            String command = scanner.nextLine().trim();
+            String command = scanner.nextLine();
 
             if (command.equals("bye")) {
-                printExitMessage();
+                System.out.println("Bye! Hope to see you again soon!");
                 break;
             } else if (command.equals("list")) {
-                printTaskList();
+                listTasks();
+            } else if (command.startsWith("todo ")) {
+                addTodo(command.substring(5));
+            } else if (command.startsWith("deadline ")) {
+                String[] parts = command.substring(9).split(" /by ");
+                addDeadline(parts[0], parts[1]);
+            } else if (command.startsWith("event ")) {
+                String[] parts = command.substring(6).split(" /from | /to ");
+                addEvent(parts[0], parts[1], parts[2]);
             } else if (command.startsWith("mark ")) {
-                markTaskAsDone(command);
+                markTask(Integer.parseInt(command.substring(5)) - 1);
             } else if (command.startsWith("unmark ")) {
-                unmarkTask(command);
+                unmarkTask(Integer.parseInt(command.substring(7)) - 1);
             } else {
-                addTask(command);
+                System.out.println("Sorry, I don't understand that command.");
             }
         }
 
         scanner.close();
     }
 
-    private static void printGreeting() {
-        System.out.println("____________________________________________________________");
-        System.out.println(" Hello! I'm BuddyBot");
-        System.out.println(" What can I do for you?");
-        System.out.println("____________________________________________________________");
+    private void listTasks() {
+        System.out.println("Here are your tasks:");
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println((i + 1) + "." + tasks.get(i));
+        }
     }
 
-    private static void printExitMessage() {
-        System.out.println("____________________________________________________________");
-        System.out.println(" Bye. Hope to see you again soon!");
-        System.out.println("____________________________________________________________");
+    private void addTodo(String description) {
+        Task task = new Todo(description);
+        tasks.add(task);
+        printTaskAdded(task);
     }
 
-    private static void addTask(String taskDescription) {
-        if (taskCount < MAX_TASKS) {
-            tasks[taskCount] = new Task(taskDescription);
-            taskCount++;
-            System.out.println("____________________________________________________________");
-            System.out.println(" added: " + taskDescription);
-            System.out.println("____________________________________________________________");
+    private void addDeadline(String description, String by) {
+        Task task = new Deadline(description, by);
+        tasks.add(task);
+        printTaskAdded(task);
+    }
+
+    private void addEvent(String description, String from, String to) {
+        Task task = new Event(description, from, to);
+        tasks.add(task);
+        printTaskAdded(task);
+    }
+
+    private void markTask(int index) {
+        if (index >= 0 && index < tasks.size()) {
+            tasks.get(index).markAsDone();
+            System.out.println("Nice! I've marked this task as done:\n  " + tasks.get(index));
         } else {
-            System.out.println("Task list is full!");
+            System.out.println("Invalid task number.");
         }
     }
 
-    private static void printTaskList() {
-        System.out.println("____________________________________________________________");
-        if (taskCount == 0) {
-            System.out.println(" No tasks in the list!");
+    private void unmarkTask(int index) {
+        if (index >= 0 && index < tasks.size()) {
+            tasks.get(index).unmarkAsDone();
+            System.out.println("OK, I've marked this task as not done yet:\n  " + tasks.get(index));
         } else {
-            System.out.println(" Here are the tasks in your list:");
-            for (int i = 0; i < taskCount; i++) {
-                System.out.println(" " + (i + 1) + ". " + tasks[i]);
-            }
-        }
-        System.out.println("____________________________________________________________");
-    }
-
-    private static void markTaskAsDone(String command) {
-        int taskIndex = getTaskIndex(command, "mark ");
-        if (taskIndex != -1) {
-            tasks[taskIndex].markAsDone();
-            System.out.println("____________________________________________________________");
-            System.out.println(" Nice! I've marked this task as done:");
-            System.out.println("   " + tasks[taskIndex]);
-            System.out.println("____________________________________________________________");
+            System.out.println("Invalid task number.");
         }
     }
 
-    private static void unmarkTask(String command) {
-        int taskIndex = getTaskIndex(command, "unmark ");
-        if (taskIndex != -1) {
-            tasks[taskIndex].unmarkAsDone();
-            System.out.println("____________________________________________________________");
-            System.out.println(" OK, I've marked this task as not done yet:");
-            System.out.println("   " + tasks[taskIndex]);
-            System.out.println("____________________________________________________________");
-        }
+    private void printTaskAdded(Task task) {
+        System.out.println("Got it! I've added this task:\n  " + task);
+        System.out.println("Now you have " + tasks.size() + " tasks in your list.");
     }
 
-    private static int getTaskIndex(String command, String prefix) {
-        try {
-            int index = Integer.parseInt(command.substring(prefix.length())) - 1;
-            if (index >= 0 && index < taskCount) {
-                return index;
-            } else {
-                System.out.println("Invalid task number!");
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Please enter a valid number.");
-        }
-        return -1;
+    public static void main(String[] args) {
+        new BuddyBot().run();
     }
 }
