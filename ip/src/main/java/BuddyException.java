@@ -1,4 +1,5 @@
-package PACKAGE_NAME;
-
-public class BuddyException {
+public class BuddyException extends Exception {
+    public BuddyException(String message) {
+        super(message);
+    }
 }
