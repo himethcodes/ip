@@ -1,11 +1,14 @@
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class BuddyBot {
     private final ArrayList<Task> tasks;
+    private static final String FILE_PATH = "data/duke.txt";
 
     public BuddyBot() {
         this.tasks = new ArrayList<>();
+        loadTasksFromFile();
     }
 
     public void run() {
@@ -55,6 +58,11 @@ public class BuddyBot {
                     int index = Integer.parseInt(command.substring(7)) - 1;
                     unmarkTask(index);
                     printLine();
+                } else if (command.startsWith("delete ")) {
+                    printLine();
+                    int index = Integer.parseInt(command.substring(7)) - 1;
+                    deleteTask(index);
+                    printLine();
                 } else {
                     throw new BuddyException("Sorry, I don't understand that command.");
                 }
@@ -93,6 +101,7 @@ public class BuddyBot {
         }
         Task task = new Todo(description);
         tasks.add(task);
+        saveTasksToFile();
         printTaskAdded(task);
     }
 
@@ -102,6 +111,7 @@ public class BuddyBot {
         }
         Task task = new Deadline(description, by);
         tasks.add(task);
+        saveTasksToFile();
         printTaskAdded(task);
     }
 
@@ -111,24 +121,58 @@ public class BuddyBot {
         }
         Task task = new Event(description, from, to);
         tasks.add(task);
+        saveTasksToFile();
         printTaskAdded(task);
     }
 
-    private void markTask(int index) throws BuddyException {
-        if (index < 0 || index >= tasks.size()) {
-            throw new BuddyException("Invalid task number.");
-        }
+    private void markTask(int index) {
         tasks.get(index).markAsDone();
+        saveTasksToFile();
         System.out.println("Nice! I've marked this task as done:\n  " + tasks.get(index));
     }
 
-    private void unmarkTask(int index) throws BuddyException {
-        if (index < 0 || index >= tasks.size()) {
-            throw new BuddyException("Invalid task number.");
-        }
+    private void unmarkTask(int index) {
         tasks.get(index).unmarkAsDone();
+        saveTasksToFile();
         System.out.println("OK, I've marked this task as not done yet:\n  " + tasks.get(index));
     }
+
+    private void deleteTask(int index) {
+        Task removedTask = tasks.remove(index);
+        saveTasksToFile();
+        System.out.println("Noted. I've removed this task:\n  " + removedTask);
+        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
+    }
+
+    private void saveTasksToFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            for (Task task : tasks) {
+                writer.write(task.toSaveFormat());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Error saving tasks to file.");
+        }
+    }
+
+    private void loadTasksFromFile() {
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                try {
+                    tasks.add(Task.parse(line));
+                } catch (BuddyException e) {
+                    System.out.println("Skipping invalid task entry: " + line);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading tasks from file.");
+        }
+    }
+
 
     private void printTaskAdded(Task task) {
         System.out.println("Got it! I've added this task:\n  " + task);
