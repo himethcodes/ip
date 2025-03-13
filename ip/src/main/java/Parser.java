@@ -24,6 +24,11 @@ public class Parser {
                 String[] eventParts = words[1].trim().split(" /from | /to ");
                 if (eventParts.length < 3) throw new BuddyException("Invalid event format.");
                 return new AddCommand(new Event(eventParts[0].trim(), eventParts[1].trim(), eventParts[2].trim()));
+            case "find":
+                if (words.length < 2) {
+                    throw new BuddyException("Please provide a keyword to search for.");
+                }
+                return new FindCommand(words[1].trim());
             default:
                 throw new BuddyException("Unknown command.");
         }
