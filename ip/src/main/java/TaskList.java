@@ -1,58 +1,124 @@
 import java.util.ArrayList;
 
-public class TaskList {
-    private final ArrayList<Task> tasks;
+/**
+ * Represents a list of tasks with operations to manage them.
+ */
 
+public class TaskList {
+    private ArrayList<Task> tasks;
+
+    /**
+     * Creates a new empty task list.
+     */
+    public TaskList() {
+        tasks = new ArrayList<>();
+    }
+
+    /**
+     * Creates a task list with existing tasks.
+     *
+     * @param tasks ArrayList of Task objects.
+     */
     public TaskList(ArrayList<Task> tasks) {
         this.tasks = tasks;
     }
 
-    public TaskList() {
-        this.tasks = new ArrayList<>();
-    }
-
+    /**
+     * Adds a task to the list.
+     *
+     * @param task Task to add.
+     */
     public void addTask(Task task) {
         tasks.add(task);
     }
 
-
+    /**
+     * Deletes a task from the list.
+     *
+     * @param index Index of the task to delete.
+     * @return The deleted Task.
+     * @throws BuddyException If the index is invalid.
+     */
     public Task deleteTask(int index) throws BuddyException {
         if (index < 0 || index >= tasks.size()) {
-            throw new BuddyException("Task number does not exist.");
+            throw new BuddyException("Task " + (index + 1) + " does not exist.");
         }
         return tasks.remove(index);
     }
 
-    public Task markTask(int index) throws BuddyException {
+    /**
+     * Gets a task at the specified index.
+     *
+     * @param index Index of the task to retrieve.
+     * @return The Task at the specified index.
+     * @throws BuddyException If the index is invalid.
+     */
+    public Task getTask(int index) throws BuddyException {
         if (index < 0 || index >= tasks.size()) {
-            throw new BuddyException("Task index out of bounds.");
+            throw new BuddyException("Task " + (index + 1) + " does not exist.");
         }
-        Task task = tasks.get(index);
+        return tasks.get(index);
+    }
+
+    /**
+     * Marks a task as done.
+     *
+     * @param index Index of the task to mark.
+     * @return The marked Task.
+     * @throws BuddyException If the index is invalid.
+     */
+    public Task markTaskDone(int index) throws BuddyException {
+        Task task = getTask(index);
         task.markAsDone();
-        return task;  // Return the marked task
+        return task;
     }
 
-
-    public Task unmarkTask(int index) throws BuddyException {
-        if (index < 0 || index >= tasks.size()) {
-            throw new BuddyException("Task index out of bounds.");
-        }
-        Task task = tasks.get(index);
+    /**
+     * Marks a task as not done.
+     *
+     * @param index Index of the task to unmark.
+     * @return The unmarked Task.
+     * @throws BuddyException If the index is invalid.
+     */
+    public Task markTaskNotDone(int index) throws BuddyException {
+        Task task = getTask(index);
         task.markAsNotDone();
-        return task;  // Return the unmarked task
+        return task;
     }
 
-
-    public void listTasks(Ui ui) {
-        if (tasks.isEmpty()) {
-            ui.showMessage("Your task list is empty.");
-        } else {
-            ui.showMessage("Here are the tasks in your list:");
-            for (int i = 0; i < tasks.size(); i++) {
-                ui.showMessage(" " + (i + 1) + "." + tasks.get(i));
-            }
-        }
+    /**
+     * Checks if the task list is empty.
+     *
+     * @return True if the list is empty, false otherwise.
+     */
+    public boolean isEmpty() {
+        return tasks.isEmpty();
     }
+
+    /**
+     * Gets the number of tasks in the list.
+     *
+     * @return The number of tasks.
+     */
+    public int size() {
+        return tasks.size();
+    }
+
+    /**
+     * Gets a task at the specified index.
+     *
+     * @param index Index of the task to retrieve.
+     * @return The Task at the specified index.
+     */
+    public Task get(int index) {
+        return tasks.get(index);
+    }
+
+    /**
+     * Gets all tasks in the list.
+     *
+     * @return ArrayList of Task objects.
+     */
     public ArrayList<Task> getTasks() {
         return tasks;
     }
