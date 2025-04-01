@@ -1,31 +1,135 @@
+/**
+ * Parses user input into commands.
+ */
 public class Parser {
-    public static Command parse(String userInput) throws BuddyException {
-        String[] words = userInput.trim().split(" ", 2);  // Trim input before splitting
-        String command = words[0];
+    /**
+     * Parses a user command string into a Command object.
+     *
+     * @param input The user input string.
+     * @return A Command object.
+     * @throws BuddyException If the command is invalid.
+     */
+    public Command parse(String input) throws BuddyException {
+        String trimmedInput = input.trim();
+        String[] parts = trimmedInput.split("\\s+", 2);
+        String commandType = parts[0].toLowerCase();
 
-        switch (command) {
+        switch (commandType) {
             case "bye":
                 return new ExitCommand();
             case "list":
                 return new ListCommand();
             case "mark":
-                return new MarkCommand(Integer.parseInt(words[1].trim()) - 1);  // Trim before parsing
+                return parseMarkCommand(parts);
             case "unmark":
-                return new UnmarkCommand(Integer.parseInt(words[1].trim()) - 1);  // Trim before parsing
-            case "delete":
-                return new DeleteCommand(Integer.parseInt(words[1].trim()) - 1);  // Trim before parsing
+                return parseUnmarkCommand(parts);
             case "todo":
-                return new AddCommand(new Todo(words[1].trim()));
+                return parseToDoCommand(parts);
             case "deadline":
-                String[] deadlineParts = words[1].trim().split(" /by ");
-                if (deadlineParts.length < 2) throw new BuddyException("Invalid deadline format.");
-                return new AddCommand(new Deadline(deadlineParts[0].trim(), deadlineParts[1].trim()));
+                return parseDeadlineCommand(parts);
             case "event":
-                String[] eventParts = words[1].trim().split(" /from | /to ");
-                if (eventParts.length < 3) throw new BuddyException("Invalid event format.");
-                return new AddCommand(new Event(eventParts[0].trim(), eventParts[1].trim(), eventParts[2].trim()));
+                return parseEventCommand(parts);
+            case "delete":
+                return parseDeleteCommand(parts);
+            case "find":
+                return parseFindCommand(parts);
             default:
-                throw new BuddyException("Unknown command.");
+                throw new BuddyException("Invalid command! Try 'todo', 'deadline', 'event', 'list', 'mark', 'unmark', 'delete', or 'find'.");
         }
+    }
+
+    private MarkCommand parseMarkCommand(String[] parts) throws BuddyException {
+        if (parts.length < 2) {
+            throw new BuddyException("Please enter a task number to mark.");
+        }
+        try {
+            int taskNumber = Integer.parseInt(parts[1]) - 1;
+            return new MarkCommand(taskNumber);
+        } catch (NumberFormatException e) {
+            throw new BuddyException("Please enter a valid task number to mark.");
+        }
+    }
+
+    private UnmarkCommand parseUnmarkCommand(String[] parts) throws BuddyException {
+        if (parts.length < 2) {
+            throw new BuddyException("Please enter a task number to unmark.");
+        }
+        try {
+            int taskNumber = Integer.parseInt(parts[1]) - 1;
+            return new UnmarkCommand(taskNumber);
+        } catch (NumberFormatException e) {
+            throw new BuddyException("Please enter a valid task number to unmark.");
+        }
+    }
+
+    private ToDoCommand parseToDoCommand(String[] parts) throws BuddyException {
+        if (parts.length < 2 || parts[1].trim().isEmpty()) {
+            throw new BuddyException("Invalid ToDo format! Use: todo [task description]");
+        }
+        return new ToDoCommand(parts[1].trim());
+    }
+
+    private DeadlineCommand parseDeadlineCommand(String[] parts) throws BuddyException {
+        if (parts.length < 2 || !parts[1].contains("/by")) {
+            throw new BuddyException("Invalid Deadline format! Use: deadline [task] /by [time]");
+        }
+
+        String[] components = parts[1].split(" /by ", 2);
+        if (components.length < 2 || components[0].trim().isEmpty() || components[1].trim().isEmpty()) {
+            throw new BuddyException("Invalid Deadline format! Use: deadline [task] /by [time]");
+        }
+
+        return new DeadlineCommand(components[0].trim(), components[1].trim());
+    }
+
+    private EventCommand parseEventCommand(String[] parts) throws BuddyException {
+        if (parts.length < 2 || !parts[1].contains("/from") || !parts[1].contains("/to")) {
+            throw new BuddyException("Invalid Event format! Use: event [task] /from [start] /to [end]");
+        }
+
+        try {
+            // Extract description (everything before "/from")
+            int fromIndex = parts[1].indexOf("/from");
+            String description = parts[1].substring(0, fromIndex).trim();
+
+            // Extract the part after "/from"
+            String afterFrom = parts[1].substring(fromIndex + 5).trim();
+
+            // Extract start time (everything before "/to")
+            int toIndex = afterFrom.indexOf("/to");
+            if (toIndex == -1) {
+                throw new BuddyException("Invalid Event format! Use: event [task] /from [start] /to [end]");
+            }
+
+            String startTime = afterFrom.substring(0, toIndex).trim();
+            String endTime = afterFrom.substring(toIndex + 3).trim();
+
+            if (description.isEmpty() || startTime.isEmpty() || endTime.isEmpty()) {
+                throw new BuddyException("Invalid Event format! Use: event [task] /from [start] /to [end]");
+            }
+
+            return new EventCommand(description, startTime, endTime);
+        } catch (Exception e) {
+            throw new BuddyException("Invalid Event format! Use: event [task] /from [start] /to [end]");
+        }
+    }
+
+    private DeleteCommand parseDeleteCommand(String[] parts) throws BuddyException {
+        if (parts.length < 2) {
+            throw new BuddyException("Please enter a task number to delete.");
+        }
+        try {
+            int taskNumber = Integer.parseInt(parts[1]) - 1;
+            return new DeleteCommand(taskNumber);
+        } catch (NumberFormatException e) {
+            throw new BuddyException("Please enter a valid task number to delete.");
+        }
+    }
+
+    private FindCommand parseFindCommand(String[] parts) throws BuddyException {
+        if (parts.length < 2 || parts[1].trim().isEmpty()) {
+            throw new BuddyException("Please enter a keyword to search for tasks.");
+        }
+        return new FindCommand(parts[1].trim());
     }
 }
